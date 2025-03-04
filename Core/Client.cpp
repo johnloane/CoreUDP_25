@@ -27,13 +27,85 @@ void Client::DoServiceLoop(const UDPSocketPtr client_socket)
 	SocketAddress sender_address;
 	int bytes_received = 0;
 
+	while (service_running)
+	{
+		PrintOptions();
+		GetChoice(choice);
+		SendDataToServer(client_socket, (char*)choice.c_str());
+		ReceiveDataFromServer(client_socket, receive_buffer, sender_address, bytes_received, service_running);
+	}
+
 
 }
 
 void Client::PrintOptions()
 {
+	std::cout << "Please enter: " << std::endl;
+	std::cout << "1) To use the ECHO service: " << std::endl;
+	std::cout << "2) To use the DATEANDTIME service: " << std::endl;
+	std::cout << "3) To use the STATS service: " << std::endl;
+	std::cout << "4) To QUIT: " << std::endl;
+
 }
 
 void Client::GetChoice(std::string& choice)
 {
+	std::getline(std::cin, choice);
+}
+
+void Client::SendDataToServer(UDPSocketPtr client_socket, char* input)
+{
+	SocketAddress server_address = SocketAddress(Client::ConvertIPToInt("127.0.0.1"), 50005);
+	int bytes_send = client_socket->SendTo(input, sizeof(input), server_address);
+}
+
+void Client::ReceiveDataFromServer(UDPSocketPtr client_socket, char* receive_buffer, SocketAddress sender_address, int bytes_received, bool& service_running)
+{
+	std::cout << sizeof(receive_buffer) << std::endl;
+	bytes_received = client_socket->ReceiveFrom(receive_buffer, kMaxPacketSize, sender_address);
+	if (bytes_received > 0)
+	{
+		ProcessReceivedData(receive_buffer, bytes_received, sender_address, service_running);
+	}
+}
+
+int Client::ConvertIPToInt(std::string ip_string)
+{
+	int int_ip = 0;
+	for (int i = 0; i < ip_string.length(); ++i)
+	{
+		if (ip_string[i] == '.')
+		{
+			ip_string[i] = ' ';
+		}
+	}
+	vector<int> array_tokens;
+	std::stringstream ss(ip_string);
+	int temp;
+	while (ss >> temp)
+	{
+		array_tokens.emplace_back(temp);
+	}
+
+	for (int i = 0; i < array_tokens.size(); ++i)
+	{
+		int_ip += (array_tokens[i] << ((3 - i) * 8));
+	}
+	return int_ip;
+
+
+}
+
+int Client::ProcessReceivedData(char* receive_buffer, int bytes_received, SocketAddress sender_address, bool& service_running)
+{
+	char key[] = "QUIT";
+
+	if (strcmp(key, receive_buffer) == 0)
+	{
+		std::cout << "Server says we need to shut down...." << std::endl;
+		service_running = false;
+	}
+
+	std::cout << "Got " << bytes_received << " from " << sender_address.ToString() << std::endl;
+	std::cout << "The message is: " << receive_buffer << std::endl;
 }
