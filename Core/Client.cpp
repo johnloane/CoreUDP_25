@@ -96,7 +96,7 @@ int Client::ConvertIPToInt(std::string ip_string)
 
 }
 
-int Client::ProcessReceivedData(char* receive_buffer, int bytes_received, SocketAddress sender_address, bool& service_running)
+void Client::ProcessReceivedData(char* receive_buffer, int bytes_received, SocketAddress sender_address, bool& service_running)
 {
 	char key[] = "QUIT";
 

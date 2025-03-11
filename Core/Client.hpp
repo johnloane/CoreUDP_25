@@ -8,7 +8,7 @@ public:
 	static void SendDataToServer(UDPSocketPtr client_socket, char* input);
 	static void ReceiveDataFromServer(UDPSocketPtr client_socket, char* receive_buffer, SocketAddress sender_address, int bytes_received, bool& service_running);
 	static int ConvertIPToInt(std::string ip_string);
-	static int ProcessReceivedData(char* receive_buffer, int bytes_received, SocketAddress sender_address, bool& service_running);
+	static void ProcessReceivedData(char* receive_buffer, int bytes_received, SocketAddress sender_address, bool& service_running);
 	static const int32_t kMaxPacketSize = 1300;
 };
 
