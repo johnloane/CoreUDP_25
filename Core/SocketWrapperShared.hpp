@@ -55,6 +55,10 @@ using std::unordered_set;
 #include "SocketUtil.hpp"
 #include "Client.hpp"
 #include "Server.hpp"
+#include "Math.hpp"
+#include "ByteSwap.hpp"
+#include "MemoryStream.hpp"
+#include "Player.hpp"
 
 #include <iostream>
 #include <sstream>
