@@ -10,13 +10,15 @@ Take input from the user, send it to the server and listen and display the resul
 
 int main()
 {
+	Player* new_player = new Player();
+	std::cout << sizeof(new_player) << std::endl;
 	SocketUtil::StaticInit();
 	UDPSocketPtr client_socket = SocketUtil::CreateUDPSocket(INET);
 	client_socket->SetNonBlockingMode(false); //Should block
-	Client::DoServiceLoop(client_socket);
+	Client::DoServiceLoop(client_socket, new_player);
 }
 
-void Client::DoServiceLoop(const UDPSocketPtr client_socket)
+void Client::DoServiceLoop(const UDPSocketPtr client_socket, Player* new_player)
 {
 	bool service_running = true;
 	string choice;
@@ -31,7 +33,14 @@ void Client::DoServiceLoop(const UDPSocketPtr client_socket)
 	{
 		PrintOptions();
 		GetChoice(choice);
-		SendDataToServer(client_socket, (char*)choice.c_str());
+		switch (static_cast<Choice>(stoi(choice)))
+		{
+		case Choice::SENDPLAYERBYTE:
+			SendPlayerOutputByteStream(client_socket, new_player);
+			break;
+		default:
+			SendDataToServer(client_socket, (char*)choice.c_str());
+		}
 		ReceiveDataFromServer(client_socket, receive_buffer, sender_address, bytes_received, service_running);
 	}
 
@@ -44,7 +53,8 @@ void Client::PrintOptions()
 	std::cout << "1) To use the ECHO service: " << std::endl;
 	std::cout << "2) To use the DATEANDTIME service: " << std::endl;
 	std::cout << "3) To use the STATS service: " << std::endl;
-	std::cout << "4) To QUIT: " << std::endl;
+	std::cout << "4) To send the player using the Byte Stream: " << std::endl;
+	std::cout << "5) To QUIT" << std::endl;
 
 }
 
@@ -108,4 +118,13 @@ void Client::ProcessReceivedData(char* receive_buffer, int bytes_received, Socke
 
 	std::cout << "Got " << bytes_received << " from " << sender_address.ToString() << std::endl;
 	std::cout << "The message is: " << receive_buffer << std::endl;
+}
+
+void Client::SendPlayerOutputByteStream(UDPSocketPtr client_socket, Player* player)
+{
+	SocketAddress server_address = SocketAddress(ConvertIPToInt("127.0.0.1"), 50005);
+	OutputMemoryStream out_stream;
+	player->Write(out_stream);
+	int bytes_sent = client_socket->SendTo(out_stream.GetBufferPtr(), out_stream.GetLength(), server_address);
+	std::cout << "Sent: " << bytes_sent << std::endl;
 }
