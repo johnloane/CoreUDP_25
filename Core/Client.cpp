@@ -15,7 +15,9 @@ int main()
 	SocketUtil::StaticInit();
 	UDPSocketPtr client_socket = SocketUtil::CreateUDPSocket(INET);
 	client_socket->SetNonBlockingMode(false); //Should block
-	Client::DoServiceLoop(client_socket, new_player);
+	//Client::DoServiceLoop(client_socket, new_player);
+	Client::SendPlayerOutputByteStream(client_socket, new_player);
+	system("pause");
 }
 
 void Client::DoServiceLoop(const UDPSocketPtr client_socket, Player* new_player)

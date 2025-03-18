@@ -4,10 +4,11 @@ int main()
 {
 	SocketUtil::StaticInit();
 	UDPSocketPtr server_socket = SocketUtil::CreateUDPSocket(INET);
-	SocketAddress server_address = SocketAddress(Server::ConvertIPToInt("10.102.209.18"), 50005);
+	SocketAddress server_address = SocketAddress(Server::ConvertIPToInt("127.0.0.1"), 50005);
 	server_socket->Bind(server_address);
 	server_socket->SetNonBlockingMode(false);
-	Server::DoServiceLoop(server_socket);
+	Server::ReceivePlayerInputByteStream(server_socket);
+	//Server::DoServiceLoop(server_socket);
 }
 
 uint32_t Server::ConvertIPToInt(std::string ip_string)
@@ -103,4 +104,19 @@ std::string Server::ReturnCurrentDataAndTime()
 	std::stringstream ss;
 	ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %X");
 	return ss.str();
+}
+
+void Server::ReceivePlayerInputByteStream(const UDPSocketPtr server_socket)
+{
+	Player* receiver = new Player();
+	SocketAddress sender_address;
+
+	char* temporary_buffer = static_cast<char*>(std::malloc(kMaxPacketSize));
+	std::cout << "Waiting for input on the socket from the client" << std::endl;
+	int bytes_received = server_socket->ReceiveFrom(temporary_buffer, kMaxPacketSize, sender_address);
+	InputMemoryStream in_stream(temporary_buffer, static_cast<uint32_t>(bytes_received));
+	receiver->Read(in_stream);
+	std::cout << "Recevied: " << bytes_received;
+	receiver->ToString();
+
 }
